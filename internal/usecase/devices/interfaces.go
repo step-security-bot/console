@@ -47,6 +47,7 @@ type (
 		GetAuditLog(startIndex int) (auditlog.Response, error)
 		GetEventLog() (messagelog.GetRecordsResponse, error)
 		GetNetworkSettings() (interface{}, error)
+		GetCertificates() (interface{}, error)
 	}
 	Redirection interface {
 		SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) wsman.Messages
@@ -95,5 +96,6 @@ type (
 		GetEventLog(ctx context.Context, guid string) (messagelog.GetRecordsResponse, error)
 		Redirect(ctx context.Context, conn *websocket.Conn, guid, mode string) error
 		GetNetworkSettings(c context.Context, guid string) (interface{}, error)
+		GetCertificates(c context.Context, guid string) (interface{}, error)
 	}
 )

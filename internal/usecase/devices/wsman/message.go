@@ -3,6 +3,7 @@ package wsman
 import (
 	"strings"
 	"time"
+	"fmt"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
@@ -41,6 +42,7 @@ import (
 	ipsAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 	ipsIEEE8021x "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
+	// "github.com/rs/zerolog/log"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
@@ -196,9 +198,9 @@ func (g *GoWSMANMessages) SetFeatures(features dto.Features) (dto.Features, erro
 }
 
 func configureKVM(features dto.Features, listenerEnabled int, g *GoWSMANMessages) (int, error) {
-	kvmRequestedState := kvm.RedirectionSAP_Disable
+	kvmRequestedState := kvm.RedirectionSAPDisable
 	if features.EnableKVM {
-		kvmRequestedState = kvm.RedirectionSAP_Enable
+		kvmRequestedState = kvm.RedirectionSAPEnable
 		listenerEnabled = 1
 	}
 
@@ -901,4 +903,78 @@ func (g *GoWSMANMessages) GetNetworkSettings() (interface{}, error) {
 	networkResults.CIMIEEE8021xSettingsResult = cimResponse.Body.PullResponse
 
 	return networkResults, nil
+}
+
+func (g *GoWSMANMessages) GetCertificates() (interface{}, error) {
+	// certificates := map[string]interface{}{}
+	credCntxtTlsEnumResp, err := g.wsmanMessages.AMT.TLSCredentialContext.Enumerate()
+	if err != nil {
+		return nil, err
+	}
+
+	credCntxtTlsResponse, err := g.wsmanMessages.AMT.TLSCredentialContext.Pull(credCntxtTlsEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(credCntxtTlsResponse)
+
+	concreteDepEnumResp, err := g.wsmanMessages.CIM.ConcreteDependency.Enumerate()
+	if err != nil {
+		return nil, err
+	}
+
+	concreteDepResponse, err := g.wsmanMessages.CIM.ConcreteDependency.Pull(concreteDepEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(concreteDepResponse)
+
+
+	pubKeyCertEnumResp, err := g.wsmanMessages.AMT.PublicKeyCertificate.Enumerate()
+	if err != nil {
+		return nil, err
+	}
+
+	pubKeyCertResponse, err := g.wsmanMessages.AMT.PublicKeyCertificate.Pull(pubKeyCertEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(pubKeyCertResponse)
+
+	pubPrivKeyPairEnumResp, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Enumerate()
+	if err != nil {
+		return nil, err
+	}
+
+	pubPrivKeyPairResponse, err := g.wsmanMessages.AMT.PublicPrivateKeyPair.Pull(pubPrivKeyPairEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(pubPrivKeyPairResponse)
+
+
+	credCntxt8021xEnumResp, err := g.wsmanMessages.IPS.IEEE8021xCredentialContext.Enumerate()
+	if err != nil {
+		return nil, err
+	}
+
+	credCntxt8021xResponse, err := g.wsmanMessages.IPS.IEEE8021xCredentialContext.Pull(credCntxt8021xEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(credCntxt8021xResponse)
+
+
+	cimCredCntxtEnumResp, err := g.wsmanMessages.CIM.CredentialContext.Enumerate()
+	if err != nil {
+		return nil, err
+	}
+
+	cimCredCntxtResponse, err := g.wsmanMessages.CIM.CredentialContext.Pull(cimCredCntxtEnumResp.Body.EnumerateResponse.EnumerationContext)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(cimCredCntxtResponse)
+
+	return credCntxtTlsResponse, nil
 }

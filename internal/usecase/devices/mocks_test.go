@@ -175,6 +175,21 @@ func (mr *MockManagementMockRecorder) GetBootData() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBootData", reflect.TypeOf((*MockManagement)(nil).GetBootData))
 }
 
+// GetCertificates mocks base method.
+func (m *MockManagement) GetCertificates() (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCertificates")
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCertificates indicates an expected call of GetCertificates.
+func (mr *MockManagementMockRecorder) GetCertificates() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCertificates", reflect.TypeOf((*MockManagement)(nil).GetCertificates))
+}
+
 // GetEventLog mocks base method.
 func (m *MockManagement) GetEventLog() (messagelog.GetRecordsResponse, error) {
 	m.ctrl.T.Helper()
@@ -789,6 +804,21 @@ func (m *MockFeature) GetByTags(ctx context.Context, tags []string, method strin
 func (mr *MockFeatureMockRecorder) GetByTags(ctx, tags, method, limit, offset, tenantID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByTags", reflect.TypeOf((*MockFeature)(nil).GetByTags), ctx, tags, method, limit, offset, tenantID)
+}
+
+// GetCertificates mocks base method.
+func (m *MockFeature) GetCertificates(c context.Context, guid string) (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCertificates", c, guid)
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCertificates indicates an expected call of GetCertificates.
+func (mr *MockFeatureMockRecorder) GetCertificates(c, guid any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCertificates", reflect.TypeOf((*MockFeature)(nil).GetCertificates), c, guid)
 }
 
 // GetCount mocks base method.

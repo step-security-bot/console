@@ -45,6 +45,7 @@ func newAmtRoutes(handler *gin.RouterGroup, d devices.Feature, l logger.Interfac
 		h.POST("userConsentCode/:guid", r.sendConsentCode)
 
 		h.GET("networkSettings/:guid", r.getNetworkSettings)
+		h.GET("certificates/:guid", r.getCertificates)
 	}
 }
 
@@ -343,6 +344,20 @@ func (r *deviceManagementRoutes) getNetworkSettings(c *gin.Context) {
 	network, err := r.d.GetNetworkSettings(c, guid)
 	if err != nil {
 		r.l.Error(err, "http - v1 - getNetworkSettings")
+		errorResponse(c, http.StatusInternalServerError, "problems")
+
+		return
+	}
+
+	c.JSON(http.StatusOK, network)
+}
+
+func (r *deviceManagementRoutes) getCertificates(c *gin.Context) {
+	guid := c.Param("guid")
+
+	network, err := r.d.GetCertificates(c, guid)
+	if err != nil {
+		r.l.Error(err, "http - v1 - getCertificates")
 		errorResponse(c, http.StatusInternalServerError, "problems")
 
 		return
