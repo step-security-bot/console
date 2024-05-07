@@ -10,6 +10,7 @@ import (
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/utils"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -21,7 +22,7 @@ type powerTestType struct {
 	action   int
 	manMock  func(*MockManagement)
 	repoMock func(*MockRepository)
-	res      power.PowerActionResponse
+	res      any
 	err      error
 }
 
@@ -47,6 +48,10 @@ func TestSendPowerAction(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 
+	powerActionRes := power.PowerActionResponse{
+		ReturnValue: 0,
+	}
+
 	tests := []powerTestType{
 		{
 			name:   "success",
@@ -57,14 +62,14 @@ func TestSendPowerAction(t *testing.T) {
 					Return()
 				man.EXPECT().
 					SendPowerAction(0).
-					Return(power.PowerActionResponse{}, nil)
+					Return(powerActionRes, nil)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: power.PowerActionResponse{},
+			res: powerActionRes,
 			err: nil,
 		},
 		{
@@ -111,6 +116,90 @@ func TestSendPowerAction(t *testing.T) {
 			tc.repoMock(repo)
 
 			res, err := useCase.SendPowerAction(context.Background(), device.GUID, tc.action)
+
+			require.Equal(t, tc.res, res)
+			require.Equal(t, tc.err, err)
+		})
+	}
+}
+
+func TestGetPowerState(t *testing.T) {
+	t.Parallel()
+
+	device := &entity.Device{
+		GUID:     "device-guid-123",
+		TenantID: "tenant-id-456",
+	}
+
+	ourRes := []service.CIM_AssociatedPowerManagementService{
+		{
+			PowerState: 0,
+		},
+	}
+
+	tests := []powerTestType{
+		{
+			name: "success",
+			manMock: func(man *MockManagement) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), false, true).
+					Return()
+				man.EXPECT().
+					GetPowerState().
+					Return(ourRes, nil)
+			},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(gomock.Any(), device.GUID, "").
+					Return(device, nil)
+			},
+			res: map[string]interface{}{
+				"powerstate": service.PowerState(0),
+			},
+			err: nil,
+		},
+		{
+			name:    "GetById fails",
+			manMock: func(man *MockManagement) {},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(gomock.Any(), device.GUID, "").
+					Return(nil, errTest)
+			},
+			res: (map[string]interface{})(nil),
+			err: utils.ErrNotFound,
+		},
+		{
+			name: "GetPowerState fails",
+			manMock: func(man *MockManagement) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), false, true).
+					Return()
+				man.EXPECT().
+					GetPowerState().
+					Return([]service.CIM_AssociatedPowerManagementService{}, ErrGeneral)
+			},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(gomock.Any(), device.GUID, "").
+					Return(device, nil)
+			},
+			res: (map[string]interface{})(nil),
+			err: ErrGeneral,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			useCase, management, repo := powerTest(t)
+
+			tc.manMock(management)
+			tc.repoMock(repo)
+
+			res, err := useCase.GetPowerState(context.Background(), device.GUID)
 
 			require.Equal(t, tc.res, res)
 			require.Equal(t, tc.err, err)
