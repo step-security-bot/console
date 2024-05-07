@@ -2,19 +2,22 @@ package devices_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
+	"github.com/open-amt-cloud-toolkit/console/internal/usecase/utils"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 )
 
+var ErrGeneral = errors.New("general error")
+
 type powerTestType struct {
 	name     string
-	guid     string
 	action   int
 	manMock  func(*MockManagement)
 	repoMock func(*MockRepository)
@@ -47,7 +50,6 @@ func TestSendPowerAction(t *testing.T) {
 	tests := []powerTestType{
 		{
 			name:   "success",
-			guid:   "test-1234",
 			action: 0,
 			manMock: func(man *MockManagement) {
 				man.EXPECT().
@@ -55,15 +57,46 @@ func TestSendPowerAction(t *testing.T) {
 					Return()
 				man.EXPECT().
 					SendPowerAction(0).
-					Return()
+					Return(power.PowerActionResponse{}, nil)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
-					GetByID(gomock.Any(), "device-guid-123", "tenant-id-456").
+					GetByID(gomock.Any(), device.GUID, "").
 					Return(device, nil)
 			},
 			res: power.PowerActionResponse{},
 			err: nil,
+		},
+		{
+			name:    "GetById fails",
+			action:  0,
+			manMock: func(man *MockManagement) {},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(gomock.Any(), device.GUID, "").
+					Return(nil, errTest)
+			},
+			res: power.PowerActionResponse{},
+			err: utils.ErrNotFound,
+		},
+		{
+			name:   "SendPowerAction fails",
+			action: 0,
+			manMock: func(man *MockManagement) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), false, true).
+					Return()
+				man.EXPECT().
+					SendPowerAction(0).
+					Return(power.PowerActionResponse{}, ErrGeneral)
+			},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(gomock.Any(), device.GUID, "").
+					Return(device, nil)
+			},
+			res: power.PowerActionResponse{},
+			err: ErrGeneral,
 		},
 	}
 
@@ -77,7 +110,7 @@ func TestSendPowerAction(t *testing.T) {
 			tc.manMock(management)
 			tc.repoMock(repo)
 
-			res, err := useCase.SendPowerAction(context.Background(), tc.guid, tc.action)
+			res, err := useCase.SendPowerAction(context.Background(), device.GUID, tc.action)
 
 			require.Equal(t, tc.res, res)
 			require.Equal(t, tc.err, err)
