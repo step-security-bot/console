@@ -9,6 +9,7 @@ import (
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/utils"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	"github.com/stretchr/testify/require"
@@ -201,6 +202,82 @@ func TestGetPowerState(t *testing.T) {
 
 			res, err := useCase.GetPowerState(context.Background(), device.GUID)
 
+			require.Equal(t, tc.res, res)
+			require.Equal(t, tc.err, err)
+		})
+	}
+}
+
+func TestGetPowerCapabilities(t *testing.T) {
+	t.Parallel()
+	device := &entity.Device{
+		GUID:     "device-guid-123",
+		TenantID: "tenant-id-456",
+	}
+	ourRes := boot.BootCapabilitiesResponse{}
+	tests := []powerTestType{
+		{
+			name: "success",
+			manMock: func(man *MockManagement) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), false, true).
+					Return()
+				man.EXPECT().
+					GetAMTVersion().
+					Return(nil, nil)
+				man.EXPECT().
+					GetPowerCapabilities().
+					Return(ourRes, nil)
+			},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(gomock.Any(), device.GUID, "").
+					Return(device, nil)
+			},
+			res: map[string]interface{}(map[string]interface{}{"Power cycle": 5, "Power down": 8, "Power on to IDE-R CDROM": 203, "Power on to IDE-R Floppy": 201, "Power on to PXE": 401, "Power up": 2, "Reset": 10, "Reset to IDE-R CDROM": 202, "Reset to IDE-R Floppy": 200, "Reset to PXE": 400}),
+			err: nil,
+		},
+		{
+			name:    "GetById fails",
+			manMock: func(man *MockManagement) {},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(gomock.Any(), device.GUID, "").
+					Return(nil, errTest)
+			},
+			res: (map[string]interface{})(nil),
+			err: utils.ErrNotFound,
+		},
+		{
+			name: "GetPowerCapabilities fails",
+			manMock: func(man *MockManagement) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), false, true).
+					Return()
+				man.EXPECT().
+					GetPowerCapabilities().
+					Return(boot.BootCapabilitiesResponse{}, ErrGeneral)
+				man.EXPECT().
+					GetAMTVersion().
+					Return(nil, nil)
+			},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(gomock.Any(), device.GUID, "").
+					Return(device, nil)
+			},
+			res: (map[string]interface{})(nil),
+			err: ErrGeneral,
+		},
+	}
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			useCase, management, repo := powerTest(t)
+			tc.manMock(management)
+			tc.repoMock(repo)
+			res, err := useCase.GetPowerCapabilities(context.Background(), device.GUID)
 			require.Equal(t, tc.res, res)
 			require.Equal(t, tc.err, err)
 		})
