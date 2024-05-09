@@ -51,11 +51,11 @@ func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]int
 func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[string]interface{}, error) {
 	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil {
-		return nil, nil
+		return nil, utils.ErrNotFound // CRAIG - switched this to error
 	}
 
 	if item.GUID == "" {
-		return nil, nil
+		return nil, nil // CRAIG - should this error be nil?
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
@@ -66,6 +66,7 @@ func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[str
 	}
 
 	capabilities, err := uc.device.GetPowerCapabilities()
+
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +77,6 @@ func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[str
 	}
 
 	response := determinePowerCapabilities(amtversion, capabilities)
-
 	return response, nil
 }
 
