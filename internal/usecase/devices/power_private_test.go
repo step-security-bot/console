@@ -3,6 +3,7 @@ package devices
 import (
 	"testing"
 
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 	"github.com/stretchr/testify/require"
 )
@@ -12,7 +13,40 @@ type powerTest struct {
 	res  any
 	err  error
 
-	version []software.SoftwareIdentity
+	bootSettings *dto.BootSetting
+	version      []software.SoftwareIdentity
+}
+
+func TestDetermineBootAction(t *testing.T) {
+	t.Parallel()
+
+	tests := []powerTest{
+		{
+			name: "Master Bus Reset",
+			res:  10,
+			bootSettings: &dto.BootSetting{
+				Action: 200,
+			},
+		},
+		{
+			name: "Power On",
+			res:  2,
+			bootSettings: &dto.BootSetting{
+				Action: 999,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			determineBootAction(tc.bootSettings)
+
+			require.Equal(t, tc.res, tc.bootSettings.Action)
+		})
+	}
 }
 
 func TestParseVersion(t *testing.T) {
