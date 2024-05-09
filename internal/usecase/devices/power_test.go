@@ -20,11 +20,12 @@ var ErrGeneral = errors.New("general error")
 
 type powerTest struct {
 	name     string
-	action   int
 	manMock  func(*MockManagement)
 	repoMock func(*MockRepository)
 	res      any
 	err      error
+
+	action int
 }
 
 func initPowerTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepository) {
