@@ -181,7 +181,7 @@ func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dt
 	return powerActionResult, nil
 }
 
-func determineIDERBootDevice(bootSetting dto.BootSetting, newData *boot.BootSettingDataRequest) { // CRAIG - newData is not pass by reference so I don't think this function does anyhting
+func determineIDERBootDevice(bootSetting dto.BootSetting, newData *boot.BootSettingDataRequest) {
 	if bootSetting.Action == 202 || bootSetting.Action == 203 {
 		newData.IDERBootDevice = 1
 	} else {
