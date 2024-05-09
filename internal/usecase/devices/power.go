@@ -152,7 +152,7 @@ func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dt
 
 	// boot on ider
 	// boot on floppy
-	determineIDERBootDevice(bootSetting, newData)
+	determineIDERBootDevice(bootSetting, &newData)
 	// force boot mode
 	_, err = uc.device.SetBootConfigRole(1)
 	if err != nil {
@@ -181,7 +181,7 @@ func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dt
 	return powerActionResult, nil
 }
 
-func determineIDERBootDevice(bootSetting dto.BootSetting, newData boot.BootSettingDataRequest) {
+func determineIDERBootDevice(bootSetting dto.BootSetting, newData *boot.BootSettingDataRequest) { // CRAIG - newData is not pass by reference so I don't think this function does anyhting
 	if bootSetting.Action == 202 || bootSetting.Action == 203 {
 		newData.IDERBootDevice = 1
 	} else {
