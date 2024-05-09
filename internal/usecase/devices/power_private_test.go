@@ -132,3 +132,57 @@ func TestParseVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestDeterminePowerCapabilities(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name             string
+		amtVersion       int
+		expectedResponse map[string]interface{}
+		expectedError    error
+	}{
+		{
+			name:       "AMT version 10",
+			amtVersion: 10,
+			expectedResponse: map[string]interface{}{
+				"Power up":                 2,
+				"Power cycle":              5,
+				"Power down":               8,
+				"Reset":                    10,
+				"Soft-off":                 12,
+				"Soft-reset":               14,
+				"Sleep":                    4,
+				"Hibernate":                7,
+				"Power on to IDE-R Floppy": 201,
+				"Reset to IDE-R CDROM":     202,
+				"Power on to IDE-R CDROM":  203,
+				"Reset to IDE-R Floppy":    200,
+				"Power on to diagnostic":   300,
+				"Reset to diagnostic":      301,
+				"Reset to PXE":             400,
+				"Power on to PXE":          401,
+			},
+			expectedError: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc // capture range variable
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			capabilities := boot.BootCapabilitiesResponse{
+				BIOSReflash:         true,
+				BIOSSetup:           false,
+				SecureErase:         false,
+				ForceDiagnosticBoot: true,
+			}
+
+			res := determinePowerCapabilities(tc.amtVersion, capabilities)
+
+			require.Equal(t, tc.expectedResponse, res)
+			require.Equal(t, tc.expectedError, nil)
+		})
+	}
+}
