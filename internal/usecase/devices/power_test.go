@@ -18,7 +18,7 @@ import (
 
 var ErrGeneral = errors.New("general error")
 
-type powerTestType struct {
+type powerTest struct {
 	name     string
 	action   int
 	manMock  func(*MockManagement)
@@ -27,7 +27,7 @@ type powerTestType struct {
 	err      error
 }
 
-func powerTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepository) {
+func initPowerTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
@@ -53,7 +53,7 @@ func TestSendPowerAction(t *testing.T) {
 		ReturnValue: 0,
 	}
 
-	tests := []powerTestType{
+	tests := []powerTest{
 		{
 			name:   "success",
 			action: 0,
@@ -111,7 +111,7 @@ func TestSendPowerAction(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := powerTest(t)
+			useCase, management, repo := initPowerTest(t)
 
 			tc.manMock(management)
 			tc.repoMock(repo)
@@ -138,7 +138,7 @@ func TestGetPowerState(t *testing.T) {
 		},
 	}
 
-	tests := []powerTestType{
+	tests := []powerTest{
 		{
 			name: "success",
 			manMock: func(man *MockManagement) {
@@ -195,7 +195,7 @@ func TestGetPowerState(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := powerTest(t)
+			useCase, management, repo := initPowerTest(t)
 
 			tc.manMock(management)
 			tc.repoMock(repo)
@@ -215,7 +215,7 @@ func TestGetPowerCapabilities(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 	ourRes := boot.BootCapabilitiesResponse{}
-	tests := []powerTestType{
+	tests := []powerTest{
 		{
 			name: "success",
 			manMock: func(man *MockManagement) {
@@ -274,7 +274,7 @@ func TestGetPowerCapabilities(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			useCase, management, repo := powerTest(t)
+			useCase, management, repo := initPowerTest(t)
 			tc.manMock(management)
 			tc.repoMock(repo)
 			res, err := useCase.GetPowerCapabilities(context.Background(), device.GUID)
