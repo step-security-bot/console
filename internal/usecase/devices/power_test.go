@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
+	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/internal/usecase/utils"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
@@ -279,6 +280,152 @@ func TestGetPowerCapabilities(t *testing.T) {
 			tc.manMock(management)
 			tc.repoMock(repo)
 			res, err := useCase.GetPowerCapabilities(context.Background(), device.GUID)
+			require.Equal(t, tc.res, res)
+			require.Equal(t, tc.err, err)
+		})
+	}
+}
+
+func TestSetBootOptions(t *testing.T) {
+	t.Parallel()
+	device := &entity.Device{
+		GUID:     "device-guid-123",
+		TenantID: "tenant-id-456",
+	}
+	bootSetting := dto.BootSetting{
+		Action: 2,
+		UseSOL: true,
+	}
+	newData := boot.BootSettingDataRequest{
+		UseSOL:                 bootSetting.UseSOL,
+		UseSafeMode:            false,
+		ReflashBIOS:            false,
+		BIOSSetup:              bootSetting.Action < 104,
+		BIOSPause:              false,
+		LockPowerButton:        false,
+		LockResetButton:        false,
+		LockKeyboard:           false,
+		LockSleepButton:        false,
+		UserPasswordBypass:     false,
+		ForcedProgressEvents:   false,
+		FirmwareVerbosity:      0,
+		ConfigurationDataReset: false,
+		UseIDER:                bootSetting.Action > 199 || bootSetting.Action < 300,
+		EnforceSecureBoot:      false,
+		BootMediaIndex:         0,
+		SecureErase:            false,
+		RPEEnabled:             false,
+		PlatformErase:          false,
+	}
+	ourRes := power.PowerActionResponse(power.PowerActionResponse{ReturnValue: 0})
+	tests := []powerTest{
+		{
+			name: "success",
+			manMock: func(man *MockManagement) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), false, true).
+					Return()
+				man.EXPECT().
+					SetBootConfigRole(1).
+					Return(ourRes, nil)
+				man.EXPECT().
+					SetBootData(newData).
+					Return(nil, nil)
+				man.EXPECT().
+					SendPowerAction(bootSetting.Action).
+					Return(ourRes, nil)
+			},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(gomock.Any(), device.GUID, "").
+					Return(device, nil)
+			},
+			res: ourRes,
+			err: nil,
+		},
+		{
+			name:    "GetById fails",
+			manMock: func(man *MockManagement) {},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(gomock.Any(), device.GUID, "").
+					Return(nil, errTest)
+			},
+			res: ourRes,
+			err: utils.ErrNotFound,
+		},
+		{
+			name: "GetPowerCapabilities fails",
+			manMock: func(man *MockManagement) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), false, true).
+					Return()
+				man.EXPECT().
+					SetBootConfigRole(1).
+					Return(ourRes, ErrGeneral)
+			},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(gomock.Any(), device.GUID, "").
+					Return(device, nil)
+			},
+			res: power.PowerActionResponse{},
+			err: ErrGeneral,
+		},
+		{
+			name: "SetBootData fails",
+			manMock: func(man *MockManagement) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), false, true).
+					Return()
+				man.EXPECT().
+					SetBootConfigRole(1).
+					Return(ourRes, nil)
+				man.EXPECT().
+					SetBootData(newData).
+					Return(nil, ErrGeneral)
+			},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(gomock.Any(), device.GUID, "").
+					Return(device, nil)
+			},
+			res: power.PowerActionResponse{},
+			err: ErrGeneral,
+		},
+		{
+			name: "GetPowerCapabilities fails",
+			manMock: func(man *MockManagement) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), false, true).
+					Return()
+				man.EXPECT().
+					SetBootConfigRole(1).
+					Return(ourRes, nil)
+				man.EXPECT().
+					SetBootData(newData).
+					Return(nil, nil)
+				man.EXPECT().
+					SendPowerAction(bootSetting.Action).
+					Return(ourRes, ErrGeneral)
+			},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(gomock.Any(), device.GUID, "").
+					Return(device, nil)
+			},
+			res: power.PowerActionResponse{},
+			err: ErrGeneral,
+		},
+	}
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			useCase, management, repo := initPowerTest(t)
+			tc.manMock(management)
+			tc.repoMock(repo)
+			res, err := useCase.SetBootOptions(context.Background(), device.GUID, bootSetting)
 			require.Equal(t, tc.res, res)
 			require.Equal(t, tc.err, err)
 		})

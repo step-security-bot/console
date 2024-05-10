@@ -123,7 +123,7 @@ func determinePowerCapabilities(amtversion int, capabilities boot.BootCapabiliti
 func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dto.BootSetting) (power.PowerActionResponse, error) {
 	item, err := uc.repo.GetByID(c, guid, "")
 	if err != nil || item.GUID == "" {
-		return power.PowerActionResponse{}, err
+		return power.PowerActionResponse{}, utils.ErrNotFound
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
