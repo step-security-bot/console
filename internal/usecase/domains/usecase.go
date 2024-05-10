@@ -2,6 +2,11 @@ package domains
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
+	"errors"
+	"strconv"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
@@ -121,6 +126,8 @@ func (uc *UseCase) Update(ctx context.Context, d *dto.Domain) (*dto.Domain, erro
 func (uc *UseCase) Insert(ctx context.Context, d *dto.Domain) (*dto.Domain, error) {
 	d1 := uc.dtoToEntity(d)
 
+	d1.ExpirationDate, _ = uc.extractExpirationDate(d.ProvisioningCert)
+
 	_, err := uc.repo.Insert(ctx, d1)
 	if err != nil {
 		return nil, ErrDatabase.Wrap("Insert", "uc.repo.Insert", err)
@@ -134,6 +141,31 @@ func (uc *UseCase) Insert(ctx context.Context, d *dto.Domain) (*dto.Domain, erro
 	d2 := uc.entityToDTO(newDomain)
 
 	return d2, nil
+}
+
+// extractExpirationDate - extract expiration date from provisioning cert in base64 format and return it
+func (uc *UseCase) extractExpirationDate(provisioningCert string) (string, error) {
+	// decode the base64 string
+	certBytes, err := base64.StdEncoding.DecodeString(provisioningCert)
+	if err != nil {
+		return "", err
+	}
+
+	// parse the certificate
+	certPem, _ := pem.Decode(certBytes)
+	if certPem == nil {
+		return "", errors.New("invalid certificate")
+	}
+
+	cert, err := x509.ParseCertificate(certPem.Bytes)
+	if err != nil {
+		return "", err
+	}
+
+	// extract the expiration date from the decoded cert
+	expirationDate := cert.NotAfter
+
+	return strconv.Itoa(int(expirationDate.Unix())), nil
 }
 
 // convert dto.Domain to entity.Domain.

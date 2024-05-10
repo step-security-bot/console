@@ -288,6 +288,8 @@ func (g *GoWSMANMessages) DeleteAlarmOccurrences(instanceID string) error {
 	return nil
 }
 
+const amtSleepTime = 250 * time.Millisecond
+
 func (g *GoWSMANMessages) hardwareGets() (GetHWResults, error) {
 	results := GetHWResults{}
 
@@ -298,25 +300,35 @@ func (g *GoWSMANMessages) hardwareGets() (GetHWResults, error) {
 		return results, err
 	}
 
+	time.Sleep(amtSleepTime)
+
 	results.ChassisResult, err = g.wsmanMessages.CIM.Chassis.Get()
 	if err != nil {
 		return results, err
 	}
+
+	time.Sleep(amtSleepTime)
 
 	results.CardResult, err = g.wsmanMessages.CIM.Card.Get()
 	if err != nil {
 		return results, err
 	}
 
+	time.Sleep(amtSleepTime)
+
 	results.ChipResult, err = g.wsmanMessages.CIM.Chip.Get()
 	if err != nil {
 		return results, err
 	}
 
+	time.Sleep(amtSleepTime)
+
 	results.BiosResult, err = g.wsmanMessages.CIM.BIOSElement.Get()
 	if err != nil {
 		return results, err
 	}
+
+	time.Sleep(amtSleepTime)
 
 	results.ProcessorResult, err = g.wsmanMessages.CIM.Processor.Get()
 	if err != nil {
@@ -329,47 +341,61 @@ func (g *GoWSMANMessages) hardwareGets() (GetHWResults, error) {
 func (g *GoWSMANMessages) hardwarePulls() (PullHWResults, error) {
 	results := PullHWResults{}
 
-	var err error
+	//	var err error
 
-	spEnumerateResult, err := g.wsmanMessages.CIM.SystemPackaging.Enumerate()
-	if err != nil {
-		return results, err
-	}
+	// spEnumerateResult, err := g.wsmanMessages.CIM.SystemPackaging.Enumerate()
+	// if err != nil {
+	// 	return results, err
+	// }
 
-	results.SPPullResult, err = g.wsmanMessages.CIM.SystemPackaging.Pull(spEnumerateResult.Body.EnumerateResponse.EnumerationContext)
-	if err != nil {
-		return results, err
-	}
+	// time.Sleep(amtSleepTime)
 
-	ppEnumerateResult, err := g.wsmanMessages.CIM.PhysicalPackage.Enumerate()
-	if err != nil {
-		return results, err
-	}
+	// results.SPPullResult, err = g.wsmanMessages.CIM.SystemPackaging.Pull(spEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	// if err != nil {
+	// 	return results, err
+	// }
 
-	results.PPPullResult, err = g.wsmanMessages.CIM.PhysicalPackage.Pull(ppEnumerateResult.Body.EnumerateResponse.EnumerationContext)
-	if err != nil {
-		return results, err
-	}
+	// time.Sleep(amtSleepTime)
 
-	mediaAccessEnumerateResult, err := g.wsmanMessages.CIM.MediaAccessDevice.Enumerate()
-	if err != nil {
-		return results, err
-	}
+	// ppEnumerateResult, err := g.wsmanMessages.CIM.PhysicalPackage.Enumerate()
+	// if err != nil {
+	// 	return results, err
+	// }
 
-	results.MediaAccessPullResult, err = g.wsmanMessages.CIM.MediaAccessDevice.Pull(mediaAccessEnumerateResult.Body.EnumerateResponse.EnumerationContext)
-	if err != nil {
-		return results, err
-	}
+	// time.Sleep(amtSleepTime)
 
-	pmEnumerateResult, err := g.wsmanMessages.CIM.PhysicalMemory.Enumerate()
-	if err != nil {
-		return results, err
-	}
+	// results.PPPullResult, err = g.wsmanMessages.CIM.PhysicalPackage.Pull(ppEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	// if err != nil {
+	// 	return results, err
+	// }
 
-	results.PhysicalMemoryResult, err = g.wsmanMessages.CIM.PhysicalMemory.Pull(pmEnumerateResult.Body.EnumerateResponse.EnumerationContext)
-	if err != nil {
-		return results, err
-	}
+	// time.Sleep(amtSleepTime)
+
+	// mediaAccessEnumerateResult, err := g.wsmanMessages.CIM.MediaAccessDevice.Enumerate()
+	// if err != nil {
+	// 	return results, err
+	// }
+
+	// time.Sleep(amtSleepTime)
+
+	// results.MediaAccessPullResult, err = g.wsmanMessages.CIM.MediaAccessDevice.Pull(mediaAccessEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	// if err != nil {
+	// 	return results, err
+	// }
+
+	// time.Sleep(amtSleepTime)
+
+	// pmEnumerateResult, err := g.wsmanMessages.CIM.PhysicalMemory.Enumerate()
+	// if err != nil {
+	// 	return results, err
+	// }
+
+	// time.Sleep(amtSleepTime)
+
+	// results.PhysicalMemoryResult, err = g.wsmanMessages.CIM.PhysicalMemory.Pull(pmEnumerateResult.Body.EnumerateResponse.EnumerationContext)
+	// if err != nil {
+	// 	return results, err
+	// }
 
 	return results, nil
 }
