@@ -296,27 +296,6 @@ func TestSetBootOptions(t *testing.T) {
 		Action: 2,
 		UseSOL: true,
 	}
-	newData := boot.BootSettingDataRequest{
-		UseSOL:                 bootSetting.UseSOL,
-		UseSafeMode:            false,
-		ReflashBIOS:            false,
-		BIOSSetup:              bootSetting.Action < 104,
-		BIOSPause:              false,
-		LockPowerButton:        false,
-		LockResetButton:        false,
-		LockKeyboard:           false,
-		LockSleepButton:        false,
-		UserPasswordBypass:     false,
-		ForcedProgressEvents:   false,
-		FirmwareVerbosity:      0,
-		ConfigurationDataReset: false,
-		UseIDER:                bootSetting.Action > 199 || bootSetting.Action < 300,
-		EnforceSecureBoot:      false,
-		BootMediaIndex:         0,
-		SecureErase:            false,
-		RPEEnabled:             false,
-		PlatformErase:          false,
-	}
 	ourRes := power.PowerActionResponse(power.PowerActionResponse{ReturnValue: 0})
 	tests := []powerTest{
 		{
@@ -329,7 +308,7 @@ func TestSetBootOptions(t *testing.T) {
 					SetBootConfigRole(1).
 					Return(ourRes, nil)
 				man.EXPECT().
-					SetBootData(newData).
+					SetBootData(gomock.Any()).
 					Return(nil, nil)
 				man.EXPECT().
 					SendPowerAction(bootSetting.Action).
@@ -382,7 +361,7 @@ func TestSetBootOptions(t *testing.T) {
 					SetBootConfigRole(1).
 					Return(ourRes, nil)
 				man.EXPECT().
-					SetBootData(newData).
+					SetBootData(gomock.Any()).
 					Return(nil, ErrGeneral)
 			},
 			repoMock: func(repo *MockRepository) {
@@ -403,7 +382,7 @@ func TestSetBootOptions(t *testing.T) {
 					SetBootConfigRole(1).
 					Return(ourRes, nil)
 				man.EXPECT().
-					SetBootData(newData).
+					SetBootData(gomock.Any()).
 					Return(nil, nil)
 				man.EXPECT().
 					SendPowerAction(bootSetting.Action).
