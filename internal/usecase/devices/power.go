@@ -159,9 +159,12 @@ func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dt
 		return power.PowerActionResponse{}, err
 	}
 
-	err = uc.changeBootOrder(bootSetting, err)
-	if err != nil {
-		return power.PowerActionResponse{}, err
+	bootSource := getBootSource(bootSetting)
+	if bootSource != "" {
+		_, err = uc.device.ChangeBootOrder(bootSource)
+		if err != nil {
+			return power.PowerActionResponse{}, err
+		}
 	}
 
 	_, err = uc.device.SetBootData(newData)
@@ -191,14 +194,15 @@ func determineIDERBootDevice(bootSetting dto.BootSetting, newData *boot.BootSett
 
 // "Intel(r) AMT: Force PXE Boot".
 // "Intel(r) AMT: Force CD/DVD Boot".
-func (uc *UseCase) changeBootOrder(bootSetting dto.BootSetting, err error) error {
-	if bootSetting.Action == 400 || bootSetting.Action == 401 {
-		_, err = uc.device.ChangeBootOrder(string(cimBoot.PXE))
-	} else if bootSetting.Action == 202 || bootSetting.Action == 203 {
-		_, err = uc.device.ChangeBootOrder(string(cimBoot.CD))
+func getBootSource(bootSetting dto.BootSetting) string {
+	switch bootSetting.Action {
+	case 400, 401:
+		return string(cimBoot.PXE)
+	case 202, 203:
+		return string(cimBoot.CD)
+	default:
+		return ""
 	}
-
-	return err
 }
 
 func determineBootAction(bootSetting *dto.BootSetting) {

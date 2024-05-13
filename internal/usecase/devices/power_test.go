@@ -82,7 +82,7 @@ func TestSendPowerAction(t *testing.T) {
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
-					Return(nil, errTest)
+					Return(nil, ErrGeneral)
 			},
 			res: power.PowerActionResponse{},
 			err: utils.ErrNotFound,
@@ -167,7 +167,7 @@ func TestGetPowerState(t *testing.T) {
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
-					Return(nil, errTest)
+					Return(nil, ErrGeneral)
 			},
 			res: (map[string]interface{})(nil),
 			err: utils.ErrNotFound,
@@ -245,7 +245,7 @@ func TestGetPowerCapabilities(t *testing.T) {
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
-					Return(nil, errTest)
+					Return(nil, ErrGeneral)
 			},
 			res: (map[string]interface{})(nil),
 			err: utils.ErrNotFound,
@@ -328,7 +328,7 @@ func TestSetBootOptions(t *testing.T) {
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
-					Return(nil, errTest)
+					Return(nil, ErrGeneral)
 			},
 			res: ourRes,
 			err: utils.ErrNotFound,

@@ -131,7 +131,7 @@ func TestDetermineIDERBootDevice(t *testing.T) {
 	}
 }
 
-// CRAIG - changeBootOrder - TestChangeBootOrder
+// CRAIG - changeBootOrder - TestChangeBootOrder Need to export this test so we can use mocks
 
 func TestDetermineBootAction(t *testing.T) {
 	t.Parallel()
