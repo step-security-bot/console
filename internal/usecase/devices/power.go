@@ -50,12 +50,8 @@ func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]int
 
 func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[string]interface{}, error) {
 	item, err := uc.GetByID(c, guid, "")
-	if err != nil {
-		return nil, utils.ErrNotFound // CRAIG - switched this to error
-	}
-
-	if item.GUID == "" {
-		return nil, nil // CRAIG - should this error be nil?
+	if err != nil || item.GUID == "" {
+		return nil, utils.ErrNotFound
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)

@@ -5,6 +5,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
+	cimBoot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 	"github.com/stretchr/testify/require"
 )
@@ -131,7 +132,44 @@ func TestDetermineIDERBootDevice(t *testing.T) {
 	}
 }
 
-// CRAIG - changeBootOrder - TestChangeBootOrder Need to export this test so we can use mocks
+func TestGetBootSource(t *testing.T) {
+	t.Parallel()
+
+	tests := []powerTest{
+		{
+			name: "Action 400",
+			res:  string(cimBoot.PXE),
+			bootSettings: dto.BootSetting{
+				Action: 400,
+			},
+		},
+		{
+			name: "Action 202",
+			res:  string(cimBoot.CD),
+			bootSettings: dto.BootSetting{
+				Action: 202,
+			},
+		},
+		{
+			name: "Action 999",
+			res:  "",
+			bootSettings: dto.BootSetting{
+				Action: 999,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			res := getBootSource(tc.bootSettings)
+
+			require.Equal(t, tc.res, res)
+		})
+	}
+}
 
 func TestDetermineBootAction(t *testing.T) {
 	t.Parallel()

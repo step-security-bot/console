@@ -134,12 +134,6 @@ func TestGetPowerState(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 
-	ourRes := []service.CIM_AssociatedPowerManagementService{
-		{
-			PowerState: 0,
-		},
-	}
-
 	tests := []powerTest{
 		{
 			name: "success",
@@ -149,7 +143,7 @@ func TestGetPowerState(t *testing.T) {
 					Return()
 				man.EXPECT().
 					GetPowerState().
-					Return(ourRes, nil)
+					Return([]service.CIM_AssociatedPowerManagementService{{PowerState: 0}}, nil)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -216,7 +210,6 @@ func TestGetPowerCapabilities(t *testing.T) {
 		GUID:     "device-guid-123",
 		TenantID: "tenant-id-456",
 	}
-	ourRes := boot.BootCapabilitiesResponse{}
 	tests := []powerTest{
 		{
 			name: "success",
@@ -229,7 +222,7 @@ func TestGetPowerCapabilities(t *testing.T) {
 					Return(nil, nil)
 				man.EXPECT().
 					GetPowerCapabilities().
-					Return(ourRes, nil)
+					Return(boot.BootCapabilitiesResponse{}, nil)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -296,7 +289,7 @@ func TestSetBootOptions(t *testing.T) {
 		Action: 2,
 		UseSOL: true,
 	}
-	ourRes := power.PowerActionResponse(power.PowerActionResponse{ReturnValue: 0})
+	powerActionRes := power.PowerActionResponse{ReturnValue: 0}
 	tests := []powerTest{
 		{
 			name: "success",
@@ -306,20 +299,20 @@ func TestSetBootOptions(t *testing.T) {
 					Return()
 				man.EXPECT().
 					SetBootConfigRole(1).
-					Return(ourRes, nil)
+					Return(powerActionRes, nil)
 				man.EXPECT().
 					SetBootData(gomock.Any()).
 					Return(nil, nil)
 				man.EXPECT().
 					SendPowerAction(bootSetting.Action).
-					Return(ourRes, nil)
+					Return(powerActionRes, nil)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: ourRes,
+			res: powerActionRes,
 			err: nil,
 		},
 		{
@@ -330,7 +323,7 @@ func TestSetBootOptions(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: ourRes,
+			res: powerActionRes,
 			err: utils.ErrNotFound,
 		},
 		{
@@ -341,7 +334,7 @@ func TestSetBootOptions(t *testing.T) {
 					Return()
 				man.EXPECT().
 					SetBootConfigRole(1).
-					Return(ourRes, ErrGeneral)
+					Return(powerActionRes, ErrGeneral)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
@@ -359,7 +352,7 @@ func TestSetBootOptions(t *testing.T) {
 					Return()
 				man.EXPECT().
 					SetBootConfigRole(1).
-					Return(ourRes, nil)
+					Return(powerActionRes, nil)
 				man.EXPECT().
 					SetBootData(gomock.Any()).
 					Return(nil, ErrGeneral)
@@ -380,13 +373,13 @@ func TestSetBootOptions(t *testing.T) {
 					Return()
 				man.EXPECT().
 					SetBootConfigRole(1).
-					Return(ourRes, nil)
+					Return(powerActionRes, nil)
 				man.EXPECT().
 					SetBootData(gomock.Any()).
 					Return(nil, nil)
 				man.EXPECT().
 					SendPowerAction(bootSetting.Action).
-					Return(ourRes, ErrGeneral)
+					Return(powerActionRes, ErrGeneral)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
