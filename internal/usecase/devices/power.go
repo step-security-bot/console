@@ -16,8 +16,8 @@ import (
 
 func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (power.PowerActionResponse, error) {
 	item, err := uc.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
-		return power.PowerActionResponse{}, utils.ErrNotFound
+	if err != nil {
+		return power.PowerActionResponse{}, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
@@ -32,8 +32,8 @@ func (uc *UseCase) SendPowerAction(c context.Context, guid string, action int) (
 
 func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]interface{}, error) {
 	item, err := uc.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
-		return nil, utils.ErrNotFound
+	if err != nil {
+		return nil, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
@@ -50,8 +50,8 @@ func (uc *UseCase) GetPowerState(c context.Context, guid string) (map[string]int
 
 func (uc *UseCase) GetPowerCapabilities(c context.Context, guid string) (map[string]interface{}, error) {
 	item, err := uc.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
-		return nil, utils.ErrNotFound
+	if err != nil {
+		return nil, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
@@ -118,8 +118,8 @@ func determinePowerCapabilities(amtversion int, capabilities boot.BootCapabiliti
 
 func (uc *UseCase) SetBootOptions(c context.Context, guid string, bootSetting dto.BootSetting) (power.PowerActionResponse, error) {
 	item, err := uc.GetByID(c, guid, "")
-	if err != nil || item.GUID == "" {
-		return power.PowerActionResponse{}, utils.ErrNotFound
+	if err != nil {
+		return power.PowerActionResponse{}, err
 	}
 
 	uc.device.SetupWsmanClient(*item, false, true)
@@ -191,14 +191,13 @@ func determineIDERBootDevice(bootSetting dto.BootSetting, newData *boot.BootSett
 // "Intel(r) AMT: Force PXE Boot".
 // "Intel(r) AMT: Force CD/DVD Boot".
 func getBootSource(bootSetting dto.BootSetting) string {
-	switch bootSetting.Action {
-	case 400, 401:
+	if bootSetting.Action == 400 || bootSetting.Action == 401 {
 		return string(cimBoot.PXE)
-	case 202, 203:
+	} else if bootSetting.Action == 202 || bootSetting.Action == 203 {
 		return string(cimBoot.CD)
-	default:
-		return ""
 	}
+
+	return ""
 }
 
 func determineBootAction(bootSetting *dto.BootSetting) {
