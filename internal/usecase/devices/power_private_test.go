@@ -3,19 +3,12 @@ package devices
 import (
 	"testing"
 
-<<<<<<< HEAD
-	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
-=======
->>>>>>> f5c053bab1d926cdab86fcb16836081c4ce82010
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
 	cimBoot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 	"github.com/stretchr/testify/require"
-<<<<<<< HEAD
-=======
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
->>>>>>> f5c053bab1d926cdab86fcb16836081c4ce82010
 )
 
 type powerTest struct {

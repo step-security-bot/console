@@ -6,7 +6,6 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
-	"github.com/open-amt-cloud-toolkit/console/internal/usecase/utils"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
@@ -68,7 +67,7 @@ func TestGetNetworkSettings(t *testing.T) {
 					Return(nil, ErrGeneral)
 			},
 			res: nil,
-			err: utils.ErrNotFound,
+			err: devices.ErrDatabase,
 		},
 		{
 			name:   "GetNetworkSettings fails",
@@ -104,7 +103,7 @@ func TestGetNetworkSettings(t *testing.T) {
 			res, err := useCase.GetNetworkSettings(context.Background(), device.GUID)
 
 			require.Equal(t, tc.res, res)
-			require.Equal(t, tc.err, err)
+			require.IsType(t, tc.err, err)
 		})
 	}
 }

@@ -2,20 +2,19 @@ package devices_test
 
 import (
 	"context"
+	"encoding/xml"
 	"testing"
-	"time"
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
 	devices "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices"
 	"github.com/open-amt-cloud-toolkit/console/pkg/logger"
-	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 )
 
-func initAlarmsTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepository) {
+func initConsentTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepository) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
@@ -29,7 +28,7 @@ func initAlarmsTest(t *testing.T) (*devices.UseCase, *MockManagement, *MockRepos
 	return u, management, repo
 }
 
-func TestGetAlarmOccurrences(t *testing.T) {
+func TestCancelUserConsent(t *testing.T) {
 	t.Parallel()
 
 	device := &entity.Device{
@@ -50,15 +49,15 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return()
 				man.EXPECT().
-					GetAlarmOccurrences().
-					Return([]alarmclock.AlarmClockOccurrence{}, nil)
+					CancelUserConsentRequest().
+					Return(gomock.Any(), nil)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: []alarmclock.AlarmClockOccurrence([]alarmclock.AlarmClockOccurrence{}),
+			res: gomock.Any(),
 			err: nil,
 		},
 		{
@@ -70,18 +69,18 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: []alarmclock.AlarmClockOccurrence([]alarmclock.AlarmClockOccurrence(nil)),
+			res: nil,
 			err: devices.ErrDatabase,
 		},
 		{
-			name:   "GetAlarmOccurrences fails",
+			name:   "CancelUserConsentRequest fails",
 			action: 0,
 			manMock: func(man *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return()
 				man.EXPECT().
-					GetAlarmOccurrences().
+					CancelUserConsentRequest().
 					Return(nil, ErrGeneral)
 			},
 			repoMock: func(repo *MockRepository) {
@@ -89,7 +88,7 @@ func TestGetAlarmOccurrences(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: []alarmclock.AlarmClockOccurrence([]alarmclock.AlarmClockOccurrence(nil)),
+			res: nil,
 			err: ErrGeneral,
 		},
 	}
@@ -99,12 +98,12 @@ func TestGetAlarmOccurrences(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initAlarmsTest(t)
+			useCase, management, repo := initConsentTest(t)
 
 			tc.manMock(management)
 			tc.repoMock(repo)
 
-			res, err := useCase.GetAlarmOccurrences(context.Background(), device.GUID)
+			res, err := useCase.CancelUserConsent(context.Background(), device.GUID)
 
 			require.Equal(t, tc.res, res)
 			require.IsType(t, tc.err, err)
@@ -112,7 +111,7 @@ func TestGetAlarmOccurrences(t *testing.T) {
 	}
 }
 
-func TestCreateAlarmOccurrences(t *testing.T) {
+func TestGetUserConsentCode(t *testing.T) {
 	t.Parallel()
 
 	device := &entity.Device{
@@ -120,24 +119,22 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 
-	//resp := amtAlarmClock.AddAlarmOutput{}
-
-	occ := dto.AlarmClockOccurrence{
-		ElementName:        "test",
-		InstanceID:         "test",
-		StartTime:          time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
-		Interval:           "1",
-		DeleteOnCompletion: true,
+	code := optin.StartOptIn_OUTPUT{
+		XMLName: xml.Name{
+			Local: "StartOptIn_OUTPUT",
+		},
+		ReturnValue: 10,
 	}
 
-	tests := []struct {
-		name     string
-		action   int
-		manMock  func(man *MockManagement)
-		repoMock func(repo *MockRepository)
-		res      amtAlarmClock.AddAlarmOutput
-		err      error
-	}{
+	response := map[string]interface{}{
+		"Body": code,
+	}
+
+	// powerActionRes := power.PowerActionResponse{
+	// 	ReturnValue: 0,
+	// }
+
+	tests := []powerTest{
 		{
 			name:   "success",
 			action: 0,
@@ -146,46 +143,46 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return()
 				man.EXPECT().
-					CreateAlarmOccurrences(occ.InstanceID, occ.StartTime, 1, occ.DeleteOnCompletion).
-					Return(amtAlarmClock.AddAlarmOutput(amtAlarmClock.AddAlarmOutput{}), nil)
+					GetUserConsentCode().
+					Return(code, nil)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: amtAlarmClock.AddAlarmOutput{},
+			res: response,
 			err: nil,
 		},
 		{
 			name:    "GetById fails",
 			action:  0,
-			manMock: func(man *MockManagement) {},
+			manMock: func(_ *MockManagement) {},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: amtAlarmClock.AddAlarmOutput{},
+			res: map[string]interface{}(map[string]interface{}(nil)),
 			err: devices.ErrDatabase,
 		},
 		{
-			name:   "GetAlarmOccurrences fails",
+			name:   "GetUserConsentCode fails",
 			action: 0,
 			manMock: func(man *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return()
 				man.EXPECT().
-					CreateAlarmOccurrences(occ.InstanceID, occ.StartTime, 1, occ.DeleteOnCompletion).
-					Return(amtAlarmClock.AddAlarmOutput{}, ErrGeneral)
+					GetUserConsentCode().
+					Return(code, ErrGeneral)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: amtAlarmClock.AddAlarmOutput{},
+			res: map[string]interface{}(map[string]interface{}(nil)),
 			err: ErrGeneral,
 		},
 	}
@@ -195,12 +192,12 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initAlarmsTest(t)
+			useCase, management, repo := initConsentTest(t)
 
 			tc.manMock(management)
 			tc.repoMock(repo)
 
-			res, err := useCase.CreateAlarmOccurrences(context.Background(), device.GUID, occ)
+			res, err := useCase.GetUserConsentCode(context.Background(), device.GUID)
 
 			require.Equal(t, tc.res, res)
 			require.IsType(t, tc.err, err)
@@ -208,7 +205,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 	}
 }
 
-func TestDeleteAlarmOccurrences(t *testing.T) {
+func TestSendConsentCode(t *testing.T) {
 	t.Parallel()
 
 	device := &entity.Device{
@@ -216,15 +213,15 @@ func TestDeleteAlarmOccurrences(t *testing.T) {
 		TenantID: "tenant-id-456",
 	}
 
-	//resp := amtAlarmClock.AddAlarmOutput{}
+	consent := dto.UserConsent{
+		ConsentCode: 123456,
+	}
 
-	tests := []struct {
-		name     string
-		action   int
-		manMock  func(man *MockManagement)
-		repoMock func(repo *MockRepository)
-		err      error
-	}{
+	// powerActionRes := power.PowerActionResponse{
+	// 	ReturnValue: 0,
+	// }
+
+	tests := []powerTest{
 		{
 			name:   "success",
 			action: 0,
@@ -233,43 +230,46 @@ func TestDeleteAlarmOccurrences(t *testing.T) {
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return()
 				man.EXPECT().
-					DeleteAlarmOccurrences("").
-					Return(nil)
+					SendConsentCode(consent.ConsentCode).
+					Return(gomock.Any(), nil)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(device, nil)
 			},
+			res: gomock.Any(),
 			err: nil,
 		},
 		{
 			name:    "GetById fails",
 			action:  0,
-			manMock: func(man *MockManagement) {},
+			manMock: func(_ *MockManagement) {},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
+			res: nil,
 			err: devices.ErrDatabase,
 		},
 		{
-			name:   "GetAlarmOccurrences fails",
+			name:   "SendConsentCode fails",
 			action: 0,
 			manMock: func(man *MockManagement) {
 				man.EXPECT().
 					SetupWsmanClient(gomock.Any(), false, true).
 					Return()
 				man.EXPECT().
-					DeleteAlarmOccurrences("").
-					Return(ErrGeneral)
+					SendConsentCode(consent.ConsentCode).
+					Return(nil, ErrGeneral)
 			},
 			repoMock: func(repo *MockRepository) {
 				repo.EXPECT().
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(device, nil)
 			},
+			res: nil,
 			err: ErrGeneral,
 		},
 	}
@@ -279,13 +279,14 @@ func TestDeleteAlarmOccurrences(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			useCase, management, repo := initAlarmsTest(t)
+			useCase, management, repo := initConsentTest(t)
 
 			tc.manMock(management)
 			tc.repoMock(repo)
 
-			err := useCase.DeleteAlarmOccurrences(context.Background(), device.GUID, "")
+			res, err := useCase.SendConsentCode(context.Background(), consent, device.GUID)
 
+			require.Equal(t, tc.res, res)
 			require.IsType(t, tc.err, err)
 		})
 	}
