@@ -673,7 +673,7 @@ func (g *GoWSMANMessages) DeletePublicCert(instanceID string) error {
 }
 
 func (g *GoWSMANMessages) GetCredentialRelationships() ([]credential.CredentialContext, error) {
-	response, err := g.wsmanMessages.CIM.CredentialContext.Enumerate()
+		response, err := g.wsmanMessages.CIM.CredentialContext.Enumerate()
 	if err != nil {
 		return nil, err
 	}
@@ -683,7 +683,7 @@ func (g *GoWSMANMessages) GetCredentialRelationships() ([]credential.CredentialC
 		return nil, err
 	}
 
-	return response.Body.PullResponse.Items, nil
+	return response.Body.PullResponse.Items.CredentialContext, nil
 }
 
 func (g *GoWSMANMessages) GetConcreteDependencies() ([]concrete.ConcreteDependency, error) {
@@ -975,6 +975,12 @@ func (g *GoWSMANMessages) GetCertificates() (interface{}, error) {
 		return nil, err
 	}
 	fmt.Println(cimCredCntxtResponse)
+
+	networkSettings, err := g.GetNetworkSettings()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(networkSettings)
 
 	return credCntxtTlsResponse, nil
 }
