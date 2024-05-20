@@ -3,7 +3,7 @@ package devices
 import (
 	"context"
 	"time"
-
+	
 	"github.com/gorilla/websocket"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
@@ -20,6 +20,7 @@ import (
 
 	"github.com/open-amt-cloud-toolkit/console/internal/entity"
 	"github.com/open-amt-cloud-toolkit/console/internal/entity/dto"
+	wsmanAPI "github.com/open-amt-cloud-toolkit/console/internal/usecase/devices/wsman"
 )
 
 type (
@@ -47,7 +48,7 @@ type (
 		GetAuditLog(startIndex int) (auditlog.Response, error)
 		GetEventLog() (messagelog.GetRecordsResponse, error)
 		GetNetworkSettings() (interface{}, error)
-		GetCertificates() (interface{}, error)
+		GetCertificates() (wsmanAPI.Certificates, error)
 	}
 	Redirection interface {
 		SetupWsmanClient(device entity.Device, isRedirection, logAMTMessages bool) wsman.Messages
