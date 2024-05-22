@@ -906,8 +906,8 @@ func (g *GoWSMANMessages) GetNetworkSettings() (interface{}, error) {
 
 type Certificates struct {
 	ConcreteDependencyResponse   concrete.PullResponse
-	PublicKeyCertificateResponse publickey.PullResponse
-	PublicPrivateKeyPairResponse publicprivate.PullResponse
+	PublicKeyCertificateResponse publickey.RefinedPullResponse
+	PublicPrivateKeyPairResponse publicprivate.RefinedPullResponse
 	CIMCredentialContextResponse credential.PullResponse
 }
 
@@ -954,8 +954,8 @@ func (g *GoWSMANMessages) GetCertificates() (Certificates, error) {
 
 	certificates := Certificates{
 		ConcreteDependencyResponse:   concreteDepResponse.Body.PullResponse,
-		PublicKeyCertificateResponse: pubKeyCertResponse.Body.PullResponse,
-		PublicPrivateKeyPairResponse: pubPrivKeyPairResponse.Body.PullResponse,
+		PublicKeyCertificateResponse: pubKeyCertResponse.Body.RefinedPullResponse,
+		PublicPrivateKeyPairResponse: pubPrivKeyPairResponse.Body.RefinedPullResponse,
 		CIMCredentialContextResponse: cimCredContextResponse.Body.PullResponse,
 	}
 

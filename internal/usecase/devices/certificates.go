@@ -38,7 +38,7 @@ func processCertificates(contextItems []credential.CredentialContext, response w
 		certificateHandle := cert.ElementInContext.ReferenceParameters.SelectorSet.Selectors[0].Text
 
 		for _, publicKeyCert := range response.PublicKeyCertificateResponse.PublicKeyCertificateItems {
-			if publicKeyCert.InstanceID == certificateHandle {
+				if publicKeyCert.InstanceID == certificateHandle {
 				if publicKeyCert.TrustedRootCertificate {
 					associatedCertificate.RootCertificate = publicKeyCert
 				} else {
