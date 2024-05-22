@@ -66,13 +66,13 @@ func (uc *UseCase) Redirect(c context.Context, conn *websocket.Conn, guid, mode 
 	}
 
 	// To Do: scoop the errors out of this for logging
-	go uc.listenToDevice(c, deviceConnection)
-	go uc.listenToBrowser(c, deviceConnection)
+	go uc.ListenToDevice(c, deviceConnection)
+	go uc.ListenToBrowser(c, deviceConnection)
 
 	return nil
 }
 
-func (uc *UseCase) listenToDevice(c context.Context, deviceConnection *DeviceConnection) {
+func (uc *UseCase) ListenToDevice(c context.Context, deviceConnection *DeviceConnection) {
 	for {
 		// setup listener for response from device
 		data, err := uc.redirection.RedirectListen(c, deviceConnection) // calls Receive()
@@ -87,6 +87,9 @@ func (uc *UseCase) listenToDevice(c context.Context, deviceConnection *DeviceCon
 		toSend := data
 		if !deviceConnection.Direct {
 			toSend, deviceConnection.Direct = processDeviceData(toSend, &deviceConnection.Challenge)
+		}
+		if len(toSend) == 0 {
+			continue
 		}
 		// Write message back to browser
 		err = deviceConnection.Conn.WriteMessage(websocket.BinaryMessage, toSend)
@@ -103,7 +106,7 @@ func (uc *UseCase) listenToDevice(c context.Context, deviceConnection *DeviceCon
 	}
 }
 
-func (uc *UseCase) listenToBrowser(c context.Context, deviceConnection *DeviceConnection) {
+func (uc *UseCase) ListenToBrowser(c context.Context, deviceConnection *DeviceConnection) {
 	for {
 		_, msg, err := deviceConnection.Conn.ReadMessage()
 		if err != nil {
