@@ -92,6 +92,25 @@ func TestGetAlarmOccurrences(t *testing.T) {
 			res: []alarmclock.AlarmClockOccurrence([]alarmclock.AlarmClockOccurrence(nil)),
 			err: ErrGeneral,
 		},
+		{
+			name:   "GetAlarmOccurrences returns nil",
+			action: 0,
+			manMock: func(man *MockManagement) {
+				man.EXPECT().
+					SetupWsmanClient(gomock.Any(), false, true).
+					Return()
+				man.EXPECT().
+					GetAlarmOccurrences().
+					Return(nil, nil)
+			},
+			repoMock: func(repo *MockRepository) {
+				repo.EXPECT().
+					GetByID(gomock.Any(), device.GUID, "").
+					Return(device, nil)
+			},
+			res: []alarmclock.AlarmClockOccurrence{},
+			err: nil,
+		},
 	}
 
 	for _, tc := range tests {
@@ -158,7 +177,7 @@ func TestCreateAlarmOccurrences(t *testing.T) {
 			err: nil,
 		},
 		{
-			name:    "GetById fails",
+			name:    "GetByID fails",
 			action:  0,
 			manMock: func(man *MockManagement) {},
 			repoMock: func(repo *MockRepository) {

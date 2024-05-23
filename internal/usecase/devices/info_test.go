@@ -507,7 +507,7 @@ func TestGetEventLog(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: messagelog.GetRecordsResponse{},
+			res: []dto.EventLog([]dto.EventLog{}),
 			err: nil,
 		},
 		{
@@ -519,7 +519,7 @@ func TestGetEventLog(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(nil, ErrGeneral)
 			},
-			res: messagelog.GetRecordsResponse{},
+			res: []dto.EventLog([]dto.EventLog(nil)),
 			err: devices.ErrDatabase,
 		},
 		{
@@ -538,7 +538,7 @@ func TestGetEventLog(t *testing.T) {
 					GetByID(gomock.Any(), device.GUID, "").
 					Return(device, nil)
 			},
-			res: messagelog.GetRecordsResponse{},
+			res: []dto.EventLog([]dto.EventLog(nil)),
 			err: ErrGeneral,
 		},
 	}
