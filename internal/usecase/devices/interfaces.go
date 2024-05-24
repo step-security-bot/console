@@ -3,7 +3,7 @@ package devices
 import (
 	"context"
 	"time"
-	
+
 	"github.com/gorilla/websocket"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
 	amtAlarmClock "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
